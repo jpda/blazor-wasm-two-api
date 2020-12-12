@@ -1,0 +1,52 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IAccessTokenProvider TokenProvider
+@inject IHttpClientFactory ClientFactory
+
+<div class="page" onload="@Go()">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4 auth">
+            <LoginDisplay />
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <div class="content px-4">
+            @Body
+            <hr/>
+            @graphString
+            <hr/>
+            @apiString
+        </div>
+    </div>
+</div>
+@code {
+    private string graphString = "";
+    private string apiString = "";
+    private async Task Go()
+    {
+        var graphTokenResult = await TokenProvider.RequestAccessToken(
+            new AccessTokenRequestOptions
+        {
+            Scopes = new[] { "User.Read" }
+        }
+        );
+
+        var myApiTokenResult = await TokenProvider.RequestAccessToken(
+            new AccessTokenRequestOptions
+        {
+            Scopes = new[] { "https://identitycrisis.dev/bigbadbiz/stuff.do" }
+        }
+        );
+
+        var gt = graphTokenResult.TryGetToken(out var graphToken);
+        var api = myApiTokenResult.TryGetToken(out var apiToken);
+        graphString = $"Graph: {gt.ToString()}: {graphToken.Value}";
+        apiString = $"Your API: {api.ToString()}: {apiToken.Value}";
+        Console.WriteLine(graphString);
+        Console.WriteLine(apiString);
+    }
+}
